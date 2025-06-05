@@ -12,7 +12,6 @@ $request_fields = [
 
 if (!check_required_fields_in_json($data, $request_fields)) {
     invalid_input_fields('Missing input fileds.');
-    exit();
 }
 
 $params = [
@@ -29,17 +28,14 @@ if ($check_if_name_exists->affected_rows != 0) {
 
 if (preg_match('/[^a-zA-Z0-9\- ]/', $data['username'])) {
     invalid_data('Your username cannot contain special characters.');
-    exit();
 }
 
 if (strlen($data['username']) < 5) {
     invalid_data('Your username cannot contain less than 5 characters');
-    exit();
 }
 
 if (strlen($data['username']) > 20) {
     invalid_data('Your username cannot contain more than 20 characters');
-    exit();
 }
 
 $params = [
