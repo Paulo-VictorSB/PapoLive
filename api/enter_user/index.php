@@ -38,6 +38,8 @@ if (strlen($data['username']) > 20) {
     invalid_data('Your username cannot contain more than 20 characters');
 }
 
+$_SESSION['username'] = $data['username'];
+
 $params = [
     ':uid' => uniqid('', true),
     ':username' => $data['username'],
