@@ -43,7 +43,7 @@ if (strlen($data['username']) > 20) {
 }
 
 $params = [
-    ':uid' => uniqid(),
+    ':uid' => uniqid('', true),
     ':username' => $data['username'],
 ];
 
@@ -55,4 +55,5 @@ $db->execute_non_query(
     $params
 );
 
+$res->set_response_data($data['username']);
 $res->response();
