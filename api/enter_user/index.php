@@ -27,7 +27,7 @@ if ($check_if_name_exists->affected_rows != 0) {
     $res->response();
 }
 
-if (preg_match('/[^a-zA-Z0-9\-]/', $data['username'])) {
+if (preg_match('/[^a-zA-Z0-9\- ]/', $data['username'])) {
     invalid_data('Your username cannot contain special characters.');
     exit();
 }
