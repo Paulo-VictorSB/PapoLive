@@ -32,7 +32,7 @@ $params = [
 
 $check_if_room_exists = $db->execute_query("SELECT uid FROM rooms WHERE uid = :room_uid", $params);
 
-if ($check_if_name_exists->affected_rows == 0) {
+if ($check_if_room_exists->affected_rows == 0) {
     invalid_data('Room not exists');
 }
 
