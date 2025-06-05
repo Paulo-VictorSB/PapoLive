@@ -14,49 +14,11 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+-- Exportação de dados foi desmarcado.
 
--- Copiando estrutura do banco de dados para papolive
-CREATE DATABASE IF NOT EXISTS `papolive` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `papolive`;
+-- Exportação de dados foi desmarcado.
 
--- Copiando estrutura para tabela papolive.messages
-CREATE TABLE IF NOT EXISTS `messages` (
-  `uid` varchar(13) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_uid` varchar(13) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `room_uid` varchar(13) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `content` varchar(13) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime NOT NULL,
-  PRIMARY KEY (`uid`),
-  KEY `user_uid` (`user_uid`),
-  KEY `room_uid` (`room_uid`),
-  CONSTRAINT `room_uid` FOREIGN KEY (`room_uid`) REFERENCES `rooms` (`uid`),
-  CONSTRAINT `user_uid` FOREIGN KEY (`user_uid`) REFERENCES `users` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Copiando dados para a tabela papolive.messages: ~0 rows (aproximadamente)
-
--- Copiando estrutura para tabela papolive.rooms
-CREATE TABLE IF NOT EXISTS `rooms` (
-  `uid` varchar(13) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime NOT NULL,
-  PRIMARY KEY (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Copiando dados para a tabela papolive.rooms: ~0 rows (aproximadamente)
-
--- Copiando estrutura para tabela papolive.users
-CREATE TABLE IF NOT EXISTS `users` (
-  `uid` varchar(13) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime NOT NULL,
-  PRIMARY KEY (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Copiando dados para a tabela papolive.users: ~2 rows (aproximadamente)
-INSERT INTO `users` (`uid`, `username`, `created_at`) VALUES
-	('6840d17491411', 'Paulo', '2025-06-04 20:06:28'),
-	('6840d18a84b26', 'Victor', '2025-06-04 20:06:50');
+-- Exportação de dados foi desmarcado.
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
