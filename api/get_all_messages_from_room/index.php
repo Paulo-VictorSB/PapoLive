@@ -2,16 +2,16 @@
 
 require_once "../inc/init.php";
 
-$data = json_decode(file_get_contents("php://input"), true);
+$data = [
+    'room_uid' => $_GET['room_uid']
+];
 
 check_request_method($request_method, 'GET');
 
-$request_fields = [
-    'room_uid'
-];
-
-if (!check_required_fields_in_json($data, $request_fields)) {
-    invalid_input_fields('Missing input fileds.');
+if (empty($data['room_uid'])) {
+    $res->set_status('error');
+    $res->set_error_message('Missing input fields');
+    $res->response();
 }
 
 $params = [
@@ -24,15 +24,18 @@ if ($check_if_room_exists->affected_rows == 0) {
     invalid_data('Room not exists');
 }
 
-var_dump($results = $db->execute_query(
-    "SELECT m.*, r.expired_at " . 
+$results = $db->execute_query(
+    "SELECT m.uid msg_uid, r.name room, u.username user, m.content content, m.created_at created_at " .
     "FROM messages m " .
     "LEFT JOIN rooms r " .
     "ON m.room_uid = r.uid " .
+    "LEFT JOIN users u " .
+    "ON m.user_uid = u.uid " .
     "WHERE r.created_at < r.expired_at " .
     "AND m.room_uid = :room_uid " .
-    "ORDER BY created_at DESC", $params
-));
+    "ORDER BY m.created_at DESC",
+    $params
+);
 
 $res->set_response_data($results->results);
 $res->response();
