@@ -25,7 +25,7 @@ if ($check_if_room_exists->affected_rows == 0) {
 }
 
 $results = $db->execute_query(
-    "SELECT m.uid msg_uid, r.name room, u.username user, m.content content, m.created_at created_at " .
+    "SELECT m.uid msg_uid, r.name room, u.username user, m.content content, m.created_at created_at, m.user_uid user_uid " .
     "FROM messages m " .
     "LEFT JOIN rooms r " .
     "ON m.room_uid = r.uid " .
@@ -33,7 +33,7 @@ $results = $db->execute_query(
     "ON m.user_uid = u.uid " .
     "WHERE r.created_at < r.expired_at " .
     "AND m.room_uid = :room_uid " .
-    "ORDER BY m.created_at DESC",
+    "ORDER BY m.created_at ASC",
     $params
 );
 
