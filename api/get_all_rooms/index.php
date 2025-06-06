@@ -7,7 +7,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 check_request_method($request_method, 'GET');
 
 $results = $db->execute_query(
-    "SELECT * FROM rooms WHERE created_at < expired_at"
+    "SELECT * FROM rooms WHERE created_at < expired_at ORDER BY created_at DESC"
 );
 
 $res->set_response_data($results->results);
