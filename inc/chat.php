@@ -12,7 +12,7 @@ if (!isset($_SESSION['username'])) {
             <h4>New Room</h4>
             <div class="row mb-3">
                 <div class="col"><button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalCreateRoom">Create</button></div>
-                <div class="col text-end"><button class="btn btn-danger">Exit</button></div>
+                <div class="col text-end"><a href="?route=logout" class="btn btn-danger">Exit</a></div>
             </div>
             <h4>Rooms</h4>
             <div class="list-group shadow" style="border: 1px solid black; max-height: 400px; overflow-y: auto;" id="rooms">
