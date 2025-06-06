@@ -8,43 +8,18 @@ if (!isset($_SESSION['username'])) {
 
 <div class="container mt-5">
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
             <h4>New Room</h4>
             <div class="row mb-3">
-                <div class="col-9"><button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#modalCreateRoom">Create</button></div>
-                <div class="col-2"><button class="btn btn-outline-primary">Exit</button></div>
+                <div class="col"><button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalCreateRoom">Create</button></div>
+                <div class="col text-end"><button class="btn btn-danger">Exit</button></div>
             </div>
             <h4>Rooms</h4>
             <div class="list-group shadow" style="border: 1px solid black; max-height: 400px; overflow-y: auto;" id="rooms">
             </div>
         </div>
 
-        <div class="col-md-8 d-flex flex-column p-3 shadow" style="border: 1px solid black">
-            <h4>Room - [Name]</h4>
-
-            <div class="border rounded p-3 mb-3 flex-grow-1 overflow-auto" style="height: 400px;">
-                <div class="d-flex mb-2">
-                    <div class="bg-light rounded px-3 py-2">
-                        <small class="text-muted">Ana Carla ~20:15h</small>
-                        <p class="mb-0">Olá, boa noite!</p>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end mb-2">
-                    <div class="bg-primary text-white rounded px-3 py-2">
-                        <small>Paulo Victor ~20:20h</small>
-                        <p class="mb-0">Boa noite!</p>
-                    </div>
-                </div>
-            </div>
-
-            <form>
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Enter your message..." aria-label="Enter your message">
-                    <button class="btn btn-primary" type="submit">Submit</button>
-                </div>
-            </form>
-        </div>
+        <div class="col-md-8 d-flex flex-column p-3 shadow" id="container-chat" style="border: 1px solid black"></div>
     </div>
 </div>
 
@@ -95,10 +70,11 @@ if (!isset($_SESSION['username'])) {
 <script>
     // Salas
     RenderRoom();
-    setInterval(RenderRoom, 36000);
+    setInterval(RenderRoom, 300000);
 
     let password_field = document.querySelector('#password_field');
     let roomPrivate = document.querySelector('#roomPrivate');
+    let container_chat = document.querySelector('#container-chat');
 
     roomPrivate.addEventListener('change', () => {
         password_field.classList.toggle('d-none', !roomPrivate.checked);
@@ -151,9 +127,6 @@ if (!isset($_SESSION['username'])) {
             })
     })
 
-    // # enviar uma mensagem
-
-    // # carregar de 2 em 2 segundos todas as salas
     function RenderRoom() {
         let rooms = document.querySelector('#rooms');
         rooms.innerHTML = ''
@@ -165,6 +138,7 @@ if (!isset($_SESSION['username'])) {
                     let a = document.createElement('a');
                     a.setAttribute('href', '#');
                     a.setAttribute('id', room.uid);
+                    a.addEventListener('click', () => openRoom(room.uid));
                     a.classList.add('list-group-item', 'list-group-item-action');
                     a.innerText = room.name;
 
@@ -172,5 +146,119 @@ if (!isset($_SESSION['username'])) {
                 });
 
             })
+    }
+
+    function openRoom(room) {
+        container_chat.innerHTML = '';
+
+        const existingTitle = document.querySelector('#roomChatName');
+        if (existingTitle) existingTitle.remove();
+
+        const user = "<?= $_SESSION['username']; ?>";
+
+        fetch(`http://localhost/PapoLive/api/get_user/?user=${user}`)
+            .then(res => res.json())
+            .then(userData => {
+                const myUserUid = userData.data[0];
+
+                return fetch(`http://localhost/PapoLive/api/get_room/?room_uid=${room}`)
+                    .then(res => res.json())
+                    .then(roomData => {
+                        if (roomData.status === "error") throw new Error(roomData.error_message);
+
+                        const roomChatName = document.createElement('h4');
+                        roomChatName.id = "roomChatName";
+                        roomChatName.innerText = `Room - ${roomData.data[0].name}`;
+                        container_chat.appendChild(roomChatName);
+
+                        return myUserUid;
+                    });
+            })
+            .then(myUserUid => {
+                return fetch(`http://localhost/PapoLive/api/get_all_messages_from_room/?room_uid=${room}`)
+                    .then(res => res.json())
+                    .then(messageData => {
+                        if (messageData.status === "error") throw new Error(messageData.error_message);
+
+                        const messages = messageData.data;
+
+                        if (!messages || messages.length === 0) {
+                            const noMessages = document.createElement('p');
+                            noMessages.id = 'noMessages';
+                            noMessages.innerText = "Nenhuma mensagem encontrada nesta sala.";
+                            container_chat.appendChild(noMessages);
+                            return;
+                        }
+
+                        const chat = document.createElement('div');
+                        chat.classList.add('border', 'rounded', 'p-3', 'mb-3', 'flex-grow-1', 'overflow-auto');
+                        chat.style.height = "400px";
+                        container_chat.appendChild(chat);
+
+                        messages.forEach(msg => {
+                            const isMine = msg.user_uid === myUserUid.uid;
+                            console.log(isMine)
+
+                            const msgContainer = document.createElement('div');
+                            msgContainer.classList.add('d-flex', 'mb-2');
+                            if (isMine) msgContainer.classList.add('justify-content-end');
+
+                            const msgBox = document.createElement('div');
+                            msgBox.classList.add('rounded', 'px-3', 'py-2');
+                            if (isMine) {
+                                msgBox.classList.add('bg-primary', 'text-white');
+                            } else {
+                                msgBox.classList.add('bg-light');
+                            }
+
+                            const small = document.createElement('small');
+                            if (!isMine) {
+                                small.classList.add('text-muted');
+                            }
+                            const time = new Date(msg.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            small.innerText = `${msg.user} ~ ${time}`;
+
+                            const p = document.createElement('p');
+                            p.classList.add('mb-0');
+                            p.innerText = msg.content;
+
+                            msgBox.appendChild(small);
+                            msgBox.appendChild(p);
+                            msgContainer.appendChild(msgBox);
+                            chat.appendChild(msgContainer);
+                        });
+
+                        const form = document.createElement('form');
+                        const inputGroup = document.createElement('div');
+                        inputGroup.classList.add('input-group');
+
+                        const input = document.createElement('input');
+                        input.type = "text";
+                        input.classList.add('form-control');
+                        input.placeholder = "Enter your message...";
+                        input.setAttribute('aria-label', 'Enter your message');
+
+                        const button = document.createElement('button');
+                        button.type = "submit";
+                        button.classList.add('btn', 'btn-primary', 'ms-3');
+                        button.innerText = "Submit";
+
+                        inputGroup.appendChild(input);
+                        inputGroup.appendChild(button);
+                        form.appendChild(inputGroup);
+                        container_chat.appendChild(form);
+                    });
+            })
+            .catch(err => {
+                const noMessages = document.querySelector('#noMessages');
+                if (noMessages) {
+                    noMessages.innerText = err.message;
+                } else {
+                    console.error(err);
+                }
+            });
     }
 </script>
