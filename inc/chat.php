@@ -92,7 +92,7 @@ if (!isset($_SESSION['username'])) {
 <script>
     // Salas
     RenderRoom();
-    setInterval(RenderRoom, 60000);
+    setInterval(RenderRoom, 1000);
 
     let password_field = document.querySelector('#password_field');
     let roomPrivate = document.querySelector('#roomPrivate');
@@ -174,33 +174,42 @@ if (!isset($_SESSION['username'])) {
     })
 
     function RenderRoom() {
-        let rooms = document.querySelector('#rooms');
-        rooms.innerHTML = ''
+        const roomsContainer = document.querySelector('#rooms');
+
         fetch('http://localhost/PapoLive/api/get_all_rooms/')
             .then(response => response.json())
             .then(data => {
+                const fetchedRooms = data.data;
 
-                data.data.forEach(room => {
-                    let a = document.createElement('a');
-                    a.setAttribute('href', '#');
-                    a.setAttribute('id', room.uid);
-                    a.classList.add('rooms')
-                    a.addEventListener('click', (e) => {
+                const existingRoomElements = Array.from(roomsContainer.querySelectorAll('.rooms'));
+                const existingRoomIds = existingRoomElements.map(el => el.id);
 
-                        document.querySelectorAll('.rooms').forEach(room => {
-                            room.classList.remove('active');
-                        })
+                const fetchedRoomIds = fetchedRooms.map(room => room.uid);
 
-                        e.target.classList.add('active');
-                        openRoom(room.uid)
-                    });
-                    a.classList.add('list-group-item', 'list-group-item-action');
-                    a.innerText = room.name;
+                fetchedRooms.forEach(room => {
+                    if (!existingRoomIds.includes(room.uid)) {
+                        const a = document.createElement('a');
+                        a.setAttribute('href', '#');
+                        a.setAttribute('id', room.uid);
+                        a.classList.add('rooms', 'list-group-item', 'list-group-item-action');
+                        a.innerText = room.name;
 
-                    rooms.append(a)
+                        a.addEventListener('click', (e) => {
+                            document.querySelectorAll('.rooms').forEach(r => r.classList.remove('active'));
+                            e.target.classList.add('active');
+                            openRoom(room.uid);
+                        });
+
+                        roomsContainer.appendChild(a);
+                    }
                 });
 
-            })
+                existingRoomElements.forEach(el => {
+                    if (!fetchedRoomIds.includes(el.id)) {
+                        el.remove();
+                    }
+                });
+            });
     }
 
     function openRoom(room) {
@@ -224,10 +233,10 @@ if (!isset($_SESSION['username'])) {
                         title.classList.remove('d-none');
                         formSendMessage.classList.remove('d-none');
 
-                        send_message_frm.addEventListener('submit', (e) => {
+                        const newHandler = (e) => {
                             e.preventDefault();
 
-                            let message_input = document.querySelector('#message_input')
+                            let message_input = document.querySelector('#message_input');
 
                             let body = {
                                 user_uid: myUserUid.uid,
@@ -254,8 +263,13 @@ if (!isset($_SESSION['username'])) {
                                 })
                                 .catch(error => {
                                     console.error(error.message);
-                                })
-                        })
+                                });
+                        };
+
+                        let newForm = send_message_frm.cloneNode(true);
+                        send_message_frm.parentNode.replaceChild(newForm, send_message_frm);
+                        send_message_frm = newForm;
+                        send_message_frm.addEventListener('submit', newHandler);
 
                         return myUserUid;
                     });
