@@ -19,7 +19,28 @@ if (!isset($_SESSION['username'])) {
             </div>
         </div>
 
-        <div class="col-md-8 d-flex flex-column p-3 shadow" id="container-chat" style="border: 1px solid black"></div>
+        <div class="col-md-8 d-flex flex-column p-3 shadow" id="container-chat" style="border: 1px solid black">
+            <!-- title -->
+            <h4 id="room_title" class="d-none"></h4>
+            <!-- chat -->
+            <div class="border rounded p-3 mb-3 flex-grow-1 overflow-auto" id="chat" style="height: 400px;">
+            </div>
+            <!-- form -->
+            <form class="d-none" id="send_message">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter your message..."
+                        aria-label="Enter your message">
+                    <button
+                        type="submit"
+                        class="btn btn-primary ms-3">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -75,6 +96,8 @@ if (!isset($_SESSION['username'])) {
     let password_field = document.querySelector('#password_field');
     let roomPrivate = document.querySelector('#roomPrivate');
     let container_chat = document.querySelector('#container-chat');
+    let chatC = document.getElementById('chat');
+    let currentMessageInterval = null;
 
     roomPrivate.addEventListener('change', () => {
         password_field.classList.toggle('d-none', !roomPrivate.checked);
@@ -138,7 +161,16 @@ if (!isset($_SESSION['username'])) {
                     let a = document.createElement('a');
                     a.setAttribute('href', '#');
                     a.setAttribute('id', room.uid);
-                    a.addEventListener('click', () => openRoom(room.uid));
+                    a.classList.add('rooms')
+                    a.addEventListener('click', (e) => {
+
+                        document.querySelectorAll('.rooms').forEach(room => {
+                            room.classList.remove('active');
+                        })
+
+                        e.target.classList.add('active');
+                        openRoom(room.uid)
+                    });
                     a.classList.add('list-group-item', 'list-group-item-action');
                     a.innerText = room.name;
 
@@ -149,12 +181,11 @@ if (!isset($_SESSION['username'])) {
     }
 
     function openRoom(room) {
-        container_chat.innerHTML = '';
+        chatC.innerHTML = '';
 
-        const existingTitle = document.querySelector('#roomChatName');
-        if (existingTitle) existingTitle.remove();
-
+        const title = document.querySelector('#room_title');
         const user = "<?= $_SESSION['username']; ?>";
+        const formSendMessage = document.querySelector('#send_message');
 
         fetch(`http://localhost/PapoLive/api/get_user/?user=${user}`)
             .then(res => res.json())
@@ -166,91 +197,32 @@ if (!isset($_SESSION['username'])) {
                     .then(roomData => {
                         if (roomData.status === "error") throw new Error(roomData.error_message);
 
-                        const roomChatName = document.createElement('h4');
-                        roomChatName.id = "roomChatName";
-                        roomChatName.innerText = `Room - ${roomData.data[0].name}`;
-                        container_chat.appendChild(roomChatName);
+                        title.innerHTML = `Room - ${roomData.data[0].name}`;
+                        title.classList.remove('d-none');
+                        formSendMessage.classList.remove('d-none');
 
                         return myUserUid;
                     });
             })
             .then(myUserUid => {
-                return fetch(`http://localhost/PapoLive/api/get_all_messages_from_room/?room_uid=${room}`)
-                    .then(res => res.json())
-                    .then(messageData => {
-                        if (messageData.status === "error") throw new Error(messageData.error_message);
+                const currentRoom = document.querySelector('.active')?.id;
 
-                        const messages = messageData.data;
+                if (currentMessageInterval !== null) {
+                    clearInterval(currentMessageInterval);
+                }
 
-                        if (!messages || messages.length === 0) {
-                            const noMessages = document.createElement('p');
-                            noMessages.id = 'noMessages';
-                            noMessages.innerText = "Nenhuma mensagem encontrada nesta sala.";
-                            container_chat.appendChild(noMessages);
-                            return;
-                        }
+                renderMessages(myUserUid, room, chatC);
 
-                        const chat = document.createElement('div');
-                        chat.classList.add('border', 'rounded', 'p-3', 'mb-3', 'flex-grow-1', 'overflow-auto');
-                        chat.style.height = "400px";
-                        container_chat.appendChild(chat);
+                currentMessageInterval = setInterval(() => {
+                    const activeRoom = document.querySelector('.active')?.id;
 
-                        messages.forEach(msg => {
-                            const isMine = msg.user_uid === myUserUid.uid;
-                            console.log(isMine)
-
-                            const msgContainer = document.createElement('div');
-                            msgContainer.classList.add('d-flex', 'mb-2');
-                            if (isMine) msgContainer.classList.add('justify-content-end');
-
-                            const msgBox = document.createElement('div');
-                            msgBox.classList.add('rounded', 'px-3', 'py-2');
-                            if (isMine) {
-                                msgBox.classList.add('bg-primary', 'text-white');
-                            } else {
-                                msgBox.classList.add('bg-light');
-                            }
-
-                            const small = document.createElement('small');
-                            if (!isMine) {
-                                small.classList.add('text-muted');
-                            }
-                            const time = new Date(msg.created_at).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
-                            small.innerText = `${msg.user} ~ ${time}`;
-
-                            const p = document.createElement('p');
-                            p.classList.add('mb-0');
-                            p.innerText = msg.content;
-
-                            msgBox.appendChild(small);
-                            msgBox.appendChild(p);
-                            msgContainer.appendChild(msgBox);
-                            chat.appendChild(msgContainer);
-                        });
-
-                        const form = document.createElement('form');
-                        const inputGroup = document.createElement('div');
-                        inputGroup.classList.add('input-group');
-
-                        const input = document.createElement('input');
-                        input.type = "text";
-                        input.classList.add('form-control');
-                        input.placeholder = "Enter your message...";
-                        input.setAttribute('aria-label', 'Enter your message');
-
-                        const button = document.createElement('button');
-                        button.type = "submit";
-                        button.classList.add('btn', 'btn-primary', 'ms-3');
-                        button.innerText = "Submit";
-
-                        inputGroup.appendChild(input);
-                        inputGroup.appendChild(button);
-                        form.appendChild(inputGroup);
-                        container_chat.appendChild(form);
-                    });
+                    if (activeRoom ==! room) {
+                        clearInterval(currentMessageInterval);
+                        currentMessageInterval = null;
+                    } 
+                    
+                    renderMessages(myUserUid, room, chatC);
+                }, 2000);
             })
             .catch(err => {
                 const noMessages = document.querySelector('#noMessages');
@@ -259,6 +231,65 @@ if (!isset($_SESSION['username'])) {
                 } else {
                     console.error(err);
                 }
+            });
+    }
+
+    // Messagens
+    function renderMessages(user, room, chat) {
+        return fetch(`http://localhost/PapoLive/api/get_all_messages_from_room/?room_uid=${room}`)
+            .then(res => res.json())
+            .then(messageData => {
+
+                if (chat) {
+                    chat.innerHTML = '';
+                }
+
+                if (messageData.status === "error") throw new Error(messageData.error_message);
+
+                const messages = messageData.data;
+
+                if (!messages || messages.length === 0) {
+                    const noMessages = document.createElement('p');
+                    noMessages.id = 'noMessages';
+                    noMessages.innerText = "Nenhuma mensagem encontrada nesta sala.";
+                    chat.appendChild(noMessages);
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const isMine = msg.user_uid === user.uid;
+
+                    const msgContainer = document.createElement('div');
+                    msgContainer.classList.add('d-flex', 'mb-2');
+                    if (isMine) msgContainer.classList.add('justify-content-end');
+
+                    const msgBox = document.createElement('div');
+                    msgBox.classList.add('rounded', 'px-3', 'py-2');
+                    if (isMine) {
+                        msgBox.classList.add('bg-primary', 'text-white');
+                    } else {
+                        msgBox.classList.add('bg-light');
+                    }
+
+                    const small = document.createElement('small');
+                    if (!isMine) {
+                        small.classList.add('text-muted');
+                    }
+                    const time = new Date(msg.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    small.innerText = `${msg.user} ~ ${time}`;
+
+                    const p = document.createElement('p');
+                    p.classList.add('mb-0');
+                    p.innerText = msg.content;
+
+                    msgBox.appendChild(small);
+                    msgBox.appendChild(p);
+                    msgContainer.appendChild(msgBox);
+                    chat.appendChild(msgContainer);
+                });
             });
     }
 </script>
