@@ -32,7 +32,8 @@ if (!isset($_SESSION['username'])) {
                         type="text"
                         class="form-control"
                         placeholder="Enter your message..."
-                        aria-label="Enter your message">
+                        aria-label="Enter your message"
+                        id="message_input">
                     <button
                         type="submit"
                         class="btn btn-primary ms-3">
@@ -91,16 +92,38 @@ if (!isset($_SESSION['username'])) {
 <script>
     // Salas
     RenderRoom();
-    setInterval(RenderRoom, 300000);
+    setInterval(RenderRoom, 60000);
 
     let password_field = document.querySelector('#password_field');
     let roomPrivate = document.querySelector('#roomPrivate');
     let container_chat = document.querySelector('#container-chat');
     let chatC = document.getElementById('chat');
     let currentMessageInterval = null;
+    let send_message_frm = document.querySelector('#send_message');
+    let autoScroll = true;
 
     roomPrivate.addEventListener('change', () => {
         password_field.classList.toggle('d-none', !roomPrivate.checked);
+    });
+
+    const observer = new MutationObserver(() => {
+        if (autoScroll) {
+            chatC.scrollTop = chatC.scrollHeight;
+        }
+    });
+
+    observer.observe(chatC, {
+        childList: true,
+        subtree: true
+    });
+
+    chatC.addEventListener('mouseenter', () => {
+        autoScroll = false;
+    });
+
+    chatC.addEventListener('mouseleave', () => {
+        autoScroll = true;
+        chatC.scrollTop = chatC.scrollHeight;
     });
 
     let enter_room = document.querySelector('#enter_room');
@@ -201,6 +224,39 @@ if (!isset($_SESSION['username'])) {
                         title.classList.remove('d-none');
                         formSendMessage.classList.remove('d-none');
 
+                        send_message_frm.addEventListener('submit', (e) => {
+                            e.preventDefault();
+
+                            let message_input = document.querySelector('#message_input')
+
+                            let body = {
+                                user_uid: myUserUid.uid,
+                                room_uid: room,
+                                content: message_input.value
+                            };
+
+                            fetch('http://localhost/PapoLive/api/enter_message/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    credentials: 'same-origin',
+                                    body: JSON.stringify(body)
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === "error") {
+                                        throw new Error(data.error_message);
+                                    }
+
+                                    message_input.value = '';
+                                    message_input.innerText = '';
+                                })
+                                .catch(error => {
+                                    console.error(error.message);
+                                })
+                        })
+
                         return myUserUid;
                     });
             })
@@ -216,13 +272,13 @@ if (!isset($_SESSION['username'])) {
                 currentMessageInterval = setInterval(() => {
                     const activeRoom = document.querySelector('.active')?.id;
 
-                    if (activeRoom ==! room) {
+                    if (activeRoom == !room) {
                         clearInterval(currentMessageInterval);
                         currentMessageInterval = null;
-                    } 
-                    
+                    }
+
                     renderMessages(myUserUid, room, chatC);
-                }, 2000);
+                }, 500);
             })
             .catch(err => {
                 const noMessages = document.querySelector('#noMessages');

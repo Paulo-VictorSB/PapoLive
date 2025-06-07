@@ -22,7 +22,7 @@ $params = [
 
 $check_if_name_exists = $db->execute_query("SELECT uid FROM users WHERE uid = :user_uid", $params);
 
-if ($check_if_name_exists->affected_rows == 0) {
+if ($check_if_name_exists->affected_rows === 0) {
     invalid_data('User not exists');
 }
 
