@@ -89,6 +89,28 @@ if (!isset($_SESSION['username'])) {
     </div>
 </div>
 
+<div class="modal fade" id="roomPasswordModal" tabindex="-1" aria-labelledby="roomPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roomPasswordModalLabel">Enter Room Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roomPasswordForm">
+                    <div class="mb-3">
+                        <label for="roomPasswordInput" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="roomPasswordInput" placeholder="Enter password" required>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Join Room</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Salas
     RenderRoom();
@@ -101,6 +123,8 @@ if (!isset($_SESSION['username'])) {
     let currentMessageInterval = null;
     let send_message_frm = document.querySelector('#send_message');
     let autoScroll = true;
+    let roomPasswordModal = document.querySelector("#roomPasswordModal");
+    let roomPasswordMessage = document.querySelector("#roomPasswordMessage");
 
     roomPrivate.addEventListener('change', () => {
         password_field.classList.toggle('d-none', !roomPrivate.checked);
@@ -213,8 +237,6 @@ if (!isset($_SESSION['username'])) {
     }
 
     function openRoom(room) {
-        chatC.innerHTML = '';
-
         const title = document.querySelector('#room_title');
         const user = "<?= $_SESSION['username']; ?>";
         const formSendMessage = document.querySelector('#send_message');
@@ -229,70 +251,52 @@ if (!isset($_SESSION['username'])) {
                     .then(roomData => {
                         if (roomData.status === "error") throw new Error(roomData.error_message);
 
-                        title.innerHTML = `Room - ${roomData.data[0].name}`;
-                        title.classList.remove('d-none');
-                        formSendMessage.classList.remove('d-none');
+                        if (roomData.data[0].password != null) {
+                            openPasswordModal();
 
-                        const newHandler = (e) => {
-                            e.preventDefault();
+                            const form = document.getElementById('roomPasswordForm');
+                            
+                            const newForm = form.cloneNode(true);
+                            form.parentNode.replaceChild(newForm, form);
 
-                            let message_input = document.querySelector('#message_input');
 
-                            let body = {
-                                user_uid: myUserUid.uid,
-                                room_uid: room,
-                                content: message_input.value
-                            };
+                            newForm.addEventListener('submit', function(e) {
+                                e.preventDefault();
 
-                            fetch('http://localhost/PapoLive/api/enter_message/', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    credentials: 'same-origin',
-                                    body: JSON.stringify(body)
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.status === "error") {
-                                        throw new Error(data.error_message);
-                                    }
+                                const password = document.getElementById('roomPasswordInput').value;
 
-                                    message_input.value = '';
-                                    message_input.innerText = '';
-                                })
-                                .catch(error => {
-                                    console.error(error.message);
-                                });
-                        };
+                                let body = {
+                                    room_uid: room,
+                                    password: password
+                                }
 
-                        let newForm = send_message_frm.cloneNode(true);
-                        send_message_frm.parentNode.replaceChild(newForm, send_message_frm);
-                        send_message_frm = newForm;
-                        send_message_frm.addEventListener('submit', newHandler);
+                                fetch("http://localhost/PapoLive/api/private_room/", {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        credentials: 'same-origin',
+                                        body: JSON.stringify(body)
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.status === "error") {
+                                            throw new Error(data.error_message);
+                                        }
 
-                        return myUserUid;
+                                        closePasswordModal();
+                                        renderMessageVerifieds(roomData, myUserUid, title, formSendMessage);
+                                        startMessageRendering(myUserUid, room);
+                                    })
+                                    .catch(err => {
+                                        alert(err.message) 
+                                    })
+                            });
+                        } else {
+                            renderMessageVerifieds(roomData, myUserUid, title, formSendMessage);
+                            startMessageRendering(myUserUid, room);
+                        }
                     });
-            })
-            .then(myUserUid => {
-                const currentRoom = document.querySelector('.active')?.id;
-
-                if (currentMessageInterval !== null) {
-                    clearInterval(currentMessageInterval);
-                }
-
-                renderMessages(myUserUid, room, chatC);
-
-                currentMessageInterval = setInterval(() => {
-                    const activeRoom = document.querySelector('.active')?.id;
-
-                    if (activeRoom == !room) {
-                        clearInterval(currentMessageInterval);
-                        currentMessageInterval = null;
-                    }
-
-                    renderMessages(myUserUid, room, chatC);
-                }, 500);
             })
             .catch(err => {
                 const noMessages = document.querySelector('#noMessages');
@@ -361,5 +365,84 @@ if (!isset($_SESSION['username'])) {
                     chat.appendChild(msgContainer);
                 });
             });
+    }
+
+    function openPasswordModal() {
+        const modal = new bootstrap.Modal(document.getElementById('roomPasswordModal'));
+        modal.show();
+    }
+
+    function closePasswordModal() {
+        const modalElement = document.getElementById('roomPasswordModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+    }
+
+    function renderMessageVerifieds(room, myUserUid, title, formSendMessage) {
+        title.innerHTML = `Room - ${room.data[0].name}`;
+        title.classList.remove('d-none');
+        formSendMessage.classList.remove('d-none');
+
+        const newHandler = (e) => {
+            e.preventDefault();
+
+            let message_input = document.querySelector('#message_input');
+
+            let body = {
+                user_uid: myUserUid.uid,
+                room_uid: room,
+                content: message_input.value
+            };
+
+            fetch('http://localhost/PapoLive/api/enter_message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(body)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "error") {
+                        throw new Error(data.error_message);
+                    }
+
+                    message_input.value = '';
+                    message_input.innerText = '';
+                })
+                .catch(error => {
+                    console.error(error.message);
+                });
+        };
+
+        let newForm = send_message_frm.cloneNode(true);
+        send_message_frm.parentNode.replaceChild(newForm, send_message_frm);
+        send_message_frm = newForm;
+        send_message_frm.addEventListener('submit', newHandler);
+    }
+
+    function startMessageRendering(myUserUid, room) {
+        const currentRoom = document.querySelector('.active')?.id;
+
+        if (currentMessageInterval !== null) {
+            clearInterval(currentMessageInterval);
+        }
+
+        renderMessages(myUserUid, room, chatC);
+
+        currentMessageInterval = setInterval(() => {
+            const activeRoom = document.querySelector('.active')?.id;
+
+            if (activeRoom != room) {
+                clearInterval(currentMessageInterval);
+                currentMessageInterval = null;
+                return;
+            }
+
+            renderMessages(myUserUid, room, chatC);
+        }, 500);
     }
 </script>
