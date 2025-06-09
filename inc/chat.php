@@ -125,6 +125,14 @@ if (!isset($_SESSION['username'])) {
     let autoScroll = true;
     let roomPasswordModal = document.querySelector("#roomPasswordModal");
     let roomPasswordMessage = document.querySelector("#roomPasswordMessage");
+    let modalCreateRoom = document.querySelector("#modalCreateRoom");
+
+    roomPasswordModal.addEventListener('hidden.bs.modal', () => {
+        closePasswordModal()
+    });
+    modalCreateRoom.addEventListener('hidden.bs.modal', () => {
+        closeRoomModal()
+    });
 
     roomPrivate.addEventListener('change', () => {
         password_field.classList.toggle('d-none', !roomPrivate.checked);
@@ -255,7 +263,7 @@ if (!isset($_SESSION['username'])) {
                             openPasswordModal();
 
                             const form = document.getElementById('roomPasswordForm');
-                            
+
                             const newForm = form.cloneNode(true);
                             form.parentNode.replaceChild(newForm, form);
 
@@ -289,7 +297,7 @@ if (!isset($_SESSION['username'])) {
                                         startMessageRendering(myUserUid, room);
                                     })
                                     .catch(err => {
-                                        alert(err.message) 
+                                        alert(err.message)
                                     })
                             });
                         } else {
@@ -378,6 +386,24 @@ if (!isset($_SESSION['username'])) {
         if (modalInstance) {
             modalInstance.hide();
         }
+        modalElement.querySelectorAll('input').forEach(input => {
+            input.value = '';
+        })
+    }
+
+    function closeRoomModal() {
+        const modalInstance = bootstrap.Modal.getInstance(modalCreateRoom);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+        modalCreateRoom.querySelectorAll('input').forEach(input => {
+            if (input.type === 'checkbox') {
+                input.checked = null;
+                password_field.classList.add('d-none');
+            } else {
+                input.value = '';
+            }
+        })
     }
 
     function renderMessageVerifieds(room, myUserUid, title, formSendMessage) {
@@ -395,7 +421,7 @@ if (!isset($_SESSION['username'])) {
                 room_uid: room.data[0].uid,
                 content: message_input.value
             };
-            
+
             fetch('http://localhost/PapoLive/api/enter_message/', {
                     method: 'POST',
                     headers: {
