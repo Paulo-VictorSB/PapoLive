@@ -262,6 +262,13 @@ if (!isset($_SESSION['username'])) {
                         if (roomData.data[0].password != null) {
                             openPasswordModal();
 
+                            title.innerHTML = `Room - ${roomData.data[0].name}`;
+                            title.classList.remove('d-none');
+
+                            formSendMessage.classList.add('d-none');
+
+                            chatC.innerHTML = `<p class="text-muted">Waiting for password..</p>`;
+
                             const form = document.getElementById('roomPasswordForm');
 
                             const newForm = form.cloneNode(true);
@@ -333,7 +340,7 @@ if (!isset($_SESSION['username'])) {
                 if (!messages || messages.length === 0) {
                     const noMessages = document.createElement('p');
                     noMessages.id = 'noMessages';
-                    noMessages.innerText = "Nenhuma mensagem encontrada nesta sala.";
+                    noMessages.innerText = "No messages found in this room, be the first to send one!.";
                     chat.appendChild(noMessages);
                     return;
                 }
