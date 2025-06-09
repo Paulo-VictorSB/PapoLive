@@ -114,7 +114,7 @@ if (!isset($_SESSION['username'])) {
 <script>
     // Salas
     RenderRoom();
-    setInterval(RenderRoom, 1000);
+    setInterval(RenderRoom, 30000);
 
     let password_field = document.querySelector('#password_field');
     let roomPrivate = document.querySelector('#roomPrivate');
@@ -392,10 +392,10 @@ if (!isset($_SESSION['username'])) {
 
             let body = {
                 user_uid: myUserUid.uid,
-                room_uid: room,
+                room_uid: room.data[0].uid,
                 content: message_input.value
             };
-
+            
             fetch('http://localhost/PapoLive/api/enter_message/', {
                     method: 'POST',
                     headers: {
