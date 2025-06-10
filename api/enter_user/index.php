@@ -39,6 +39,7 @@ if (strlen($data['username']) > 20) {
 }
 
 $_SESSION['username'] = $data['username'];
+$_SESSION['chat.js'] = true;
 
 $params = [
     ':uid' => uniqid('', true),
