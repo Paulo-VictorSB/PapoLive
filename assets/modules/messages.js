@@ -14,7 +14,7 @@ export function renderMessageVerifieds(room, myUserUid, title, formSendMessage) 
             content: message_input.value
         };
 
-        fetch('http://localhost/PapoLive/api/enter_message/', {
+        fetch('https://pbarbosaprojetos.byethost31.com/api/enter_message/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -65,7 +65,7 @@ export function startMessageRendering(myUserUid, room) {
 }
 
 export function renderMessages(user, room, chat) {
-    return fetch(`http://localhost/PapoLive/api/get_all_messages_from_room/?room_uid=${room}`)
+    return fetch(`https://pbarbosaprojetos.byethost31.com/api/get_all_messages_from_room/?room_uid=${room}`)
         .then(res => res.json())
         .then(messageData => {
 

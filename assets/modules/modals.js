@@ -3,17 +3,6 @@ export function openPasswordModal() {
     modal.show();
 }
 
-export function closePasswordModal() {
-    const modalElement = document.getElementById('roomPasswordModal');
-    const modalInstance = bootstrap.Modal.getInstance(modalElement);
-    if (modalInstance) {
-        modalInstance.hide();
-    }
-    modalElement.querySelectorAll('input').forEach(input => {
-        input.value = '';
-    })
-}
-
 export function closeRoomModal() {
     const modalInstance = bootstrap.Modal.getInstance(modalCreateRoom);
     if (modalInstance) {
@@ -26,5 +15,16 @@ export function closeRoomModal() {
         } else {
             input.value = '';
         }
+    })
+}
+
+export function closePasswordModal() {
+    const modalElement = document.getElementById('roomPasswordModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+    modalElement.querySelectorAll('input').forEach(input => {
+        input.value = '';
     })
 }

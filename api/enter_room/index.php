@@ -54,17 +54,20 @@ if (!empty($data['password'])) {
     $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 }
 
+$dataHora = (new DateTime("now", new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
+
 $params = [
     ':uid' => uniqid('', true),
     ':room' => $data['room'],
-    ':password' => !empty($data['password']) ? $data['password'] : null
+    ':password' => !empty($data['password']) ? $data['password'] : null,
+    ':created_at' => $dataHora
 ];
 
 $db->execute_non_query(
     "INSERT INTO rooms " .
         "(uid, name, created_at, expired_at, password) " .
         "VALUES " .
-        "(:uid, :room, NOW(), NOW() + INTERVAL 7 DAY, :password)",
+        "(:uid, :room, :created_at, :created_at + INTERVAL 7 DAY, :password)",
     $params
 );
 

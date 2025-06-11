@@ -6,7 +6,7 @@ export function setupLogin(form, username, error_message) {
             username: username.value
         }
 
-        fetch('http://localhost/PapoLive/api/enter_user/', {
+        fetch('https://pbarbosaprojetos.byethost31.com/api/enter_user/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -39,18 +39,20 @@ if (strlen($data['username']) > 20) {
 }
 
 $_SESSION['username'] = $data['username'];
-$_SESSION['chat.js'] = true;
+
+$dataHora = (new DateTime("now", new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
 
 $params = [
     ':uid' => uniqid('', true),
     ':username' => $data['username'],
+    'created_at' => $dataHora
 ];
 
 $db->execute_non_query(
         "INSERT INTO users " .
         "(uid, username, created_at) " .
         "VALUES " .
-        "(:uid, :username, NOW())",
+        "(:uid, :username, :created_at)",
     $params
 );
 

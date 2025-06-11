@@ -1,11 +1,12 @@
 import { openPasswordModal } from "./modals.js";
+import { closePasswordModal } from "./modals.js";
 
 import { renderMessages } from "./messages.js";
 import { renderMessageVerifieds } from "./messages.js";
 import { startMessageRendering } from "./messages.js";
 
 export function RenderRoom(roomsContainer, user, title, formSendMessage) {
-    fetch('http://localhost/PapoLive/api/get_all_rooms/')
+    fetch('https://pbarbosaprojetos.byethost31.com/api/get_all_rooms/')
         .then(response => response.json())
         .then(data => {
             const fetchedRooms = data.data;
@@ -56,7 +57,7 @@ export function EnterRoom(modalCreateRoom, roomsContainer, user, title, formSend
         }
     }
 
-    fetch('http://localhost/PapoLive/api/enter_room/', {
+    fetch('https://pbarbosaprojetos.byethost31.com/api/enter_room/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -83,12 +84,12 @@ export function EnterRoom(modalCreateRoom, roomsContainer, user, title, formSend
 }
 
 function openRoom(room, user, title, formSendMessage) {
-    fetch(`http://localhost/PapoLive/api/get_user/?user=${user}`)
+    fetch(`https://pbarbosaprojetos.byethost31.com/api/get_user/?user=${user}`)
     .then(res => res.json())
     .then(userData => {
         const myUserUid = userData.data[0];
 
-        return fetch(`http://localhost/PapoLive/api/get_room/?room_uid=${room}`)
+        return fetch(`https://pbarbosaprojetos.byethost31.com/api/get_room/?room_uid=${room}`)
             .then(res => res.json())
             .then(roomData => {
                 if (roomData.status === "error") throw new Error(roomData.error_message);
@@ -119,7 +120,7 @@ function openRoom(room, user, title, formSendMessage) {
                             password: password
                         }
 
-                        fetch("http://localhost/PapoLive/api/private_room/", {
+                        fetch("https://pbarbosaprojetos.byethost31.com/api/private_room/", {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'

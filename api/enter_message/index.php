@@ -44,18 +44,21 @@ if (strlen($data['content']) > 1000) {
     invalid_data('Your message cannot contain more than 1000 characters');
 }
 
+$dataHora = (new DateTime("now", new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
+
 $params = [
     ':uid' => uniqid('', true),
     ':user_uid' => $data['user_uid'],
     ':room_uid' => $data['room_uid'],
-    ':content' => $data['content']
+    ':content' => $data['content'],
+    ':created_at' => $dataHora
 ];
 
 $db->execute_non_query(
         "INSERT INTO messages " .
         "(uid, user_uid, room_uid, content, created_at) " .
         "VALUES " .
-        "(:uid, :user_uid, :room_uid, :content, NOW())",
+        "(:uid, :user_uid, :room_uid, :content, :created_at)",
     $params
 );
 
